@@ -2,14 +2,7 @@ var express = require('express');
 var router = express.Router();
 const bcrypt = require('bcrypt');
 var pool = require('../middleware/database').databaseConnection
-const jwt = require('jsonwebtoken'); // Nécessite `npm install jsonwebtoken`
-
-
-
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+const jwt = require('jsonwebtoken');
 
 /**
  * EndPoint pour créer un utilistateur a partir de ces infos ainsi que son Role
