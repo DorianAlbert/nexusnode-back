@@ -7,7 +7,13 @@ var pool = require('../middleware/database').databaseConnection
  */
 router.get('/', async (req, res, next) => {
     try {
-        const result = await pool.query('SELECT * FROM Materiel M, Categorie C where M.idCategorie = C.idCategorie');
+        const result = await pool.query('SELECT Materiel.libelle AS materiel_libelle, \n' +
+            '       Materiel.description, \n' +
+            '       Materiel.prix, \n' +
+            '       Materiel.dateSortie, \n' +
+            '       Categorie.libelle AS categorie_libelle\n' +
+            'FROM Materiel, Categorie \n' +
+            'WHERE Materiel.idCategorie = Categorie.idCategorie;\n');
         res.json(result);
     } catch (error) {
         console.error("Erreur lors de la récupération des catégories:", error);
