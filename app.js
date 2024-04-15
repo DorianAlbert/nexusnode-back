@@ -10,6 +10,7 @@ var categorieRouter = require('./routes/categorie');
 var materielRouter = require('./routes/materiel');
 var adresseRouter = require('./routes/adresse');
 var paiementRouter = require('./routes/paiement')
+var commandeRouter = require('/routes/commnde')
 
 
 
@@ -37,7 +38,8 @@ app.use('/users', usersRouter);
 app.use('/categorie', categorieRouter);
 app.use('/materiel', materielRouter);
 app.use('/adresse', adresseRouter);
-app.use('/paiement', paiementRouter)
+app.use('/paiement', paiementRouter);
+app.use ('/commande', commandeRouter);
 
 
 
