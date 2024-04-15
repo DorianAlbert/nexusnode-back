@@ -15,10 +15,13 @@ var paiementRouter = require('./routes/paiement')
 
 var app = express();
 const port = 3000;
+const cors = require('cors');
 
 // Vue Engine Setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
+
+app.use(cors());
 
 // Middleware
 app.use(logger('dev'));
