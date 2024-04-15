@@ -5,7 +5,7 @@ var pool = require('../middleware/database').databaseConnection
 /**
  * Afficher toutes les commandes
  */
-router.get('/commandes', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const results = await pool.query('SELECT * FROM Commande');
         res.status(200).send(results);
