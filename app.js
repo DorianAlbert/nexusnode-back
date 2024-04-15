@@ -9,7 +9,7 @@ var usersRouter = require('./routes/users');
 var categorieRouter = require('./routes/categorie');
 var materielRouter = require('./routes/materiel');
 var adresseRouter = require('./routes/adresse');
-var paiementRouter = require('/routes/paiement')
+var paiementRouter = require('./routes/paiement')
 
 
 

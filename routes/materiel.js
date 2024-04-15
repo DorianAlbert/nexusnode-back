@@ -44,7 +44,7 @@ router.post('/', async (req, res) => {
         const result = await pool.query('INSERT INTO Materiel (libelle, description, prix, dateSortie, idCategorie) VALUES (?, ?, ?, ?, ?)', [libelle, description, parsedPrix, dateSortie, idCategorie]);
         const insertIdAsString = result.insertId.toString();
         res.status(201).send({ message: 'Matériel ajouté avec succès', idMateriel: insertIdAsString });
-    } catch (error) {
+    } catch (error) {z
         console.error("Erreur lors de l'ajout du matériel:", error);
         res.status(500).send({ message: "Erreur lors de l'ajout du matériel", error: error.message });
     }
