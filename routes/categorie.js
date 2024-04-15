@@ -17,13 +17,6 @@ router.get('/', async (req, res, next) => {
         res.status(500).send({ message: "Erreur lors de la récupération des catégories", error: error.message });
     }
 });
-
-/**
- * EndPoint pour créer un utilistateur a partir de ces infos ainsi que son Role
- * 1= Client
- * 2= Admin
- * 3= Support
- */
 router.post('/', async (req, res) => {
     try {
         const { libelle } = req.body;

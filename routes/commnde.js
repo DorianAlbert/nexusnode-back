@@ -112,8 +112,8 @@ router.get('/commandes/:idCommande/materiels', async (req, res) => {
 /**
  * Obtenir les libellés de chaque matériel, la quantité vendue entre deux dates et le prix total
  */
-router.get('/materiels/ventes', async (req, res) => {
-    const { startDate, endDate } = req.query;
+router.get('/materiels/ventes/:startDate/:endDate', async (req, res) => {
+    const { startDate, endDate } = req.params;
     try {
         const results = await pool.query(
             'SELECT m.libelle, SUM(dc.quantite) AS quantite_vendue, SUM(dc.quantite * m.prix) AS prix_total FROM DetailCommande dc ' +
@@ -143,7 +143,7 @@ router.post('/detailcommande', async (req, res) => {
 /**
  * Modifier un DetailCommande
  */
-router.put('/detailcommande/:idCommande/:idMateriel', async (req, res) => {
+router.patch('/detailcommande/:idCommande/:idMateriel', async (req, res) => {
     const { idCommande, idMateriel } = req.params;
     const { quantite } = req.body;
     try {
