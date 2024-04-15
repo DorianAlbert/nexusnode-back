@@ -19,10 +19,48 @@ router.get('/:idPaiement', async (req, res) => {
     res.status(200).send(results);
 });
 
-router.post('/'), async (req, res) =>{
-    const{}
-}
+router.post('/', async (req, res) =>{
+    const{datePaiement, etat} = req.body;
+    try {
+        const result = await pool.query('INSERT INTO Paiement (datePaiement, Etat) VALUES (?, ?)', [datePaiement, etat]);
+        const insertIdAsString = result.insertId.toString();
+        res.status(201).send({ message: 'Paiement ajouté avec succès', idPaiement: insertIdAsString });
+    } catch (error) {
+        console.error("Erreur lors de l'ajout du Paiement:", error);
+        res.status(500).send({ message: "Erreur lors de l'ajout du Paiement", error: error.message });
+    }});
 
-
+router.patch('/:idPaiement', async (req, res) => {
+    const { idPaiement } = req.params;
+    const{etat} = req.body;
+    try {
+        const result = await pool.query('UPDATE Paiement SET Etat = ? WHERE idPaiement = ?', [etat, idPaiement]);
+        if (result.affectedRows) {
+            res.send({ message: 'Paiement mis à jour avec succès' });
+        } else {
+            res.status(404).send({ message: 'Paiement non trouvé' });
+        }
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour du Paiement:", error);
+        res.status(500).send({ message: "Erreur lors de la mise à jour du Paiement", error: error.message });
+    }
+});
+/**
+ * Supprime un matériel en fonction de son ID
+ */
+router.delete('/:idPaiement', async (req, res) => {
+    const { idPaiement } = req.params;
+    try {
+        const result = await pool.query('DELETE FROM Paiement WHERE idPaiement = ?', [idPaiement]);
+        if (result.affectedRows) {
+            res.send({ message: 'idPaiement supprimé avec succès' });
+        } else {
+            res.status(404).send({ message: 'idPaiement non trouvé' });
+        }
+    } catch (error) {
+        console.error("Erreur lors de la suppression du idPaiement:", error);
+        res.status(500).send({ message: "Erreur lors de la suppression du idPaiement", error: error.message });
+    }
+});
 
 module.exports = router;
