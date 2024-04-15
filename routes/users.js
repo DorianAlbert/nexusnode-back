@@ -27,14 +27,18 @@ router.post('/sign-up', async (req, res) => {
 router.post('/sign-in', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const rows = await pool.query('SELECT idUser, password, role FROM Utilisateur WHERE mail = ?', [email]);
+    const rows = await pool.query('SELECT idUser,nom, prenom, mail, password, role FROM Utilisateur WHERE mail = ?', [email]);
     if (rows.length > 0) {
       const user = rows[0];
       const passwordIsValid = await bcrypt.compare(password, user.password);
       if (passwordIsValid) {
         const dataUser = {
           id: user.idUser,
-          role: user.role
+          role: user.role,
+          nom: user.nom,
+          mail: user.mail,
+          prenom: user.prenom
+
         }
         const token = jwt.sign({ id: user.idUser, role: user.role }, 'secret', { expiresIn: 86400 });
         res.status(200).send({ auth: true, token: token, info: dataUser });
@@ -49,5 +53,12 @@ router.post('/sign-in', async (req, res) => {
     res.status(500).send("Erreur lors de la connexion.");
   }
 });
+
+
+router.get('/:userId'), async (req, res) => {
+  const {userId} = req.param
+  const results = await pool.query('SELECT nom, prenom, mail  FROM Utisateur WHERE idUser = ?', [userId]);
+  res.status(200).send(results);
+}
 
 module.exports = router;
