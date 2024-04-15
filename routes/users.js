@@ -32,8 +32,12 @@ router.post('/sign-in', async (req, res) => {
       const user = rows[0];
       const passwordIsValid = await bcrypt.compare(password, user.password);
       if (passwordIsValid) {
+        const dataUser = {
+          id: user.idUser,
+          role: user.role
+        }
         const token = jwt.sign({ id: user.idUser, role: user.role }, 'secret', { expiresIn: 86400 });
-        res.status(200).send({ auth: true, token: token });
+        res.status(200).send({ auth: true, token: token, info: dataUser });
       } else {
         return res.status(401).send({ auth: false, token: null, message: "Mot de passe invalide." });
       }
