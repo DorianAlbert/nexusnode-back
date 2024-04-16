@@ -15,9 +15,9 @@ router.get('/', async (req, res) => {
                 C.dateCommande,
                 CONCAT(A.rue, ', ', A.ville, ', ', A.CDP, ', ', A.pays) AS AdresseLivraison,
                 U.idUser,
-                U.nom AS NomClient,
+                CONCAT(U.nom, ' ', U.prenom) AS NomClient,
                 SUM(DC.quantite * M.prix) AS TotalHT,
-                SUM(DC.quantite * M.prix) * 1.20 AS TotalTTC, -- Supposant une TVA de 20%
+                SUM(DC.quantite * M.prix) * 1.20 AS TotalTTC,
                 GROUP_CONCAT(CONCAT(M.libelle, ' x ', DC.quantite) SEPARATOR ', ') AS DetailsProduits
             FROM Commande C
             JOIN Adresse A ON C.idAdresse = A.idAdresse
