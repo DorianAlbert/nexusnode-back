@@ -11,6 +11,7 @@ router.get('/', async (req, res, next) => {
             '       Materiel.description, \n' +
             '       Materiel.prix, \n' +
             '       Materiel.dateSortie, \n' +
+            '       Materiel.PATH_Image, \n' +
             '       Categorie.libelle AS categorie_libelle, \n' +
             '       Categorie.idCategorie AS id_Categorie \n' +
             'FROM Materiel, Categorie \n' +
@@ -41,15 +42,15 @@ router.get('/:idCategorie', async (req, res, next) => {
  * libelle, description, prix, dateSortie, idCategorie
  */
 router.post('/', async (req, res) => {
-    const { libelle, description, prix, dateSortie, idCategorie } = req.body;
-    console.log(libelle, description, prix, dateSortie, idCategorie);
+    const { libelle, description, prix, dateSortie, idCategorie, Image } = req.body;
+    console.log(libelle, description, prix, dateSortie, idCategorie, Image);
     try {
         // Convertir `prix` en nombre flottant pour s'assurer que ce n'est pas un BigInt
         const parsedPrix = parseFloat(prix);
         if (isNaN(parsedPrix)) {
             return res.status(400).send({ message: "Le prix est invalide" });
         }
-        const result = await pool.query('INSERT INTO Materiel (libelle, description, prix, dateSortie, idCategorie) VALUES (?, ?, ?, ?, ?)', [libelle, description, parsedPrix, dateSortie, idCategorie]);
+        const result = await pool.query('INSERT INTO Materiel (libelle, description, prix, dateSortie, idCategorie, PATH_Image) VALUES (?, ?, ?, ?, ?, ?)', [libelle, description, parsedPrix, dateSortie, idCategorie, Image]);
         const insertIdAsString = result.insertId.toString();
         res.status(201).send({ message: 'Matériel ajouté avec succès', idMateriel: insertIdAsString });
     } catch (error) {z
@@ -64,9 +65,9 @@ router.post('/', async (req, res) => {
  */
 router.patch('/:idMateriel', async (req, res) => {
     const { idMateriel } = req.params;
-    const { libelle, description, prix, dateSortie, idCategorie } = req.body;
+    const { libelle, description, prix, dateSortie, idCategorie , image } = req.body;
     try {
-        const result = await pool.query('UPDATE Materiel SET libelle = ?, description = ?, prix = ?, dateSortie = ?, idCategorie = ? WHERE idMateriel = ?', [libelle, description, prix, dateSortie, idCategorie, idMateriel]);
+        const result = await pool.query('UPDATE Materiel SET libelle = ?, description = ?, prix = ?, dateSortie = ?, idCategorie = ? , PATH_Image = ? WHERE idMateriel = ?', [libelle, description, prix, dateSortie, idCategorie,image, idMateriel ]);
         if (result.affectedRows) {
             res.send({ message: 'Matériel mis à jour avec succès' });
         } else {
