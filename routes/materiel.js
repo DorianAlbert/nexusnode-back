@@ -7,7 +7,14 @@ var pool = require('../middleware/database').databaseConnection
  */
 router.get('/', async (req, res, next) => {
     try {
-        const result = await pool.query('SELECT * FROM Materiel M, Categorie C where M.idCategorie = C.idCategorie');
+        const result = await pool.query('SELECT Materiel.libelle AS materiel_libelle, \n' +
+            '       Materiel.description, \n' +
+            '       Materiel.prix, \n' +
+            '       Materiel.dateSortie, \n' +
+            '       Categorie.libelle AS categorie_libelle, \n' +
+            '       Categorie.idCategorie AS id_Categorie \n' +
+            'FROM Materiel, Categorie \n' +
+            'WHERE Materiel.idCategorie = Categorie.idCategorie;\n');
         res.json(result);
     } catch (error) {
         console.error("Erreur lors de la récupération des catégories:", error);
@@ -21,13 +28,14 @@ router.get('/:idCategorie', async (req, res, next) => {
     const { idCategorie } = req.params;
 
     try {
-        const result = await pool.query('SELECT * FROM Materiel M, Categorie C where M.idCategorie = C.idCategorie and M.idCategorie = ?',[idCategorie]);
+        const result = await pool.query('SELECT M.*, C.idCategorie AS categorieId, C.libelle AS categorieNom FROM Materiel M, Categorie C WHERE M.idCategorie = C.idCategorie AND M.idCategorie = ?', [idCategorie]);
         res.json(result);
     } catch (error) {
         console.error("Erreur lors de la récupération des catégories:", error);
         res.status(500).send({ message: "Erreur lors de la récupération des catégories", error: error.message });
     }
 });
+
 /**
  * Ajoute un nouveau Matériel dans la base de donnée
  * libelle, description, prix, dateSortie, idCategorie
