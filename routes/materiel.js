@@ -7,7 +7,7 @@ var pool = require('../middleware/database').databaseConnection
  */
 router.get('/', async (req, res, next) => {
     try {
-        const result = await pool.query('SELECT Materiel.libelle AS materiel_libelle, \n' +
+        const result = await pool.query('SELECT Materiel.libelle AS materiel_libelle, Materiel.idMateriel, \n' +
             '       Materiel.description, \n' +
             '       Materiel.prix, \n' +
             '       Materiel.dateSortie, \n' +
