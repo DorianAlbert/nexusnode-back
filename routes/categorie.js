@@ -17,6 +17,19 @@ router.get('/', async (req, res, next) => {
         res.status(500).send({ message: "Erreur lors de la récupération des catégories", error: error.message });
     }
 });
+router.get('/:idCat', async (req, res, next) => {
+    const {idCat} = req.params
+    try {
+        // Exécute la requête pour obtenir toutes les catégories
+        const result = await pool.query('SELECT * FROM Categorie WHERE idCategorie = ?', [idCat], );
+
+        // Envoie les résultats de la requête en réponse
+        res.json(result);
+    } catch (error) {
+        console.error("Erreur lors de la récupération des catégories:", error);
+        res.status(500).send({ message: "Erreur lors de la récupération des catégories", error: error.message });
+    }
+});
 router.post('/', async (req, res) => {
     try {
         const { libelle } = req.body;

@@ -1,6 +1,10 @@
 var express = require('express');
 var router = express.Router();
 var pool = require('../middleware/database').databaseConnection
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+
+
 
 /**
  * Récupere la liste de tout les Matériels présent dans la base de donnée
@@ -41,23 +45,40 @@ router.get('/:idCategorie', async (req, res, next) => {
  * Ajoute un nouveau Matériel dans la base de donnée
  * libelle, description, prix, dateSortie, idCategorie
  */
-router.post('/', async (req, res) => {
-    const { libelle, description, prix, dateSortie, idCategorie, Image } = req.body;
-    console.log(libelle, description, prix, dateSortie, idCategorie, Image);
+router.post('/update', upload.single('image'), async (req, res) => {
+    const { libelle, description, prix, dateSortie, idCategorie } = req.body;
+    const image = req.file; // Contient les informations sur l'image téléchargée
+    console.log(libelle, description, prix, dateSortie, idCategorie, image);
+
     try {
         // Convertir `prix` en nombre flottant pour s'assurer que ce n'est pas un BigInt
         const parsedPrix = parseFloat(prix);
         if (isNaN(parsedPrix)) {
             return res.status(400).send({ message: "Le prix est invalide" });
         }
-        const result = await pool.query('INSERT INTO Materiel (libelle, description, prix, dateSortie, idCategorie, PATH_Image) VALUES (?, ?, ?, ?, ?, ?)', [libelle, description, parsedPrix, dateSortie, idCategorie, Image]);
+
+        // Vérifier si une image a été téléchargée
+        if (!image) {
+            return res.status(400).send({ message: "Aucune image téléchargée" });
+        }
+
+        // Construire le chemin de destination pour l'image
+        const imagePath = `/${idCategorie}/${image.originalname}`;
+
+        // Déplacer l'image téléchargée vers le dossier de destination
+        await fs.move(image.path, imagePath);
+
+        // Insérer les données dans la base de données avec le chemin de l'image
+        const result = await pool.query('INSERT INTO Materiel (libelle, description, prix, dateSortie, idCategorie, PATH_Image) VALUES (?, ?, ?, ?, ?, ?)', [libelle, description, parsedPrix, dateSortie, idCategorie, imagePath]);
         const insertIdAsString = result.insertId.toString();
+
         res.status(201).send({ message: 'Matériel ajouté avec succès', idMateriel: insertIdAsString });
-    } catch (error) {z
+    } catch (error) {
         console.error("Erreur lors de l'ajout du matériel:", error);
         res.status(500).send({ message: "Erreur lors de l'ajout du matériel", error: error.message });
     }
 });
+
 /**
  * Modifie un Matériel dans la Base de donnée
  * IdMateriel dans la requete -->    PATCH->  http://localhost:3000/materiel/3
