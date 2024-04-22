@@ -31,8 +31,11 @@ router.get('/:idCat', async (req, res, next) => {
     }
 });
 router.post('/', async (req, res) => {
+    console.log(req.body);
+
     try {
         const { libelle } = req.body;
+        console.log(req.body);
         const result = await pool.query('INSERT INTO Categorie (libelle) VALUES (?)', [libelle]);
         res.status(201).send({ message: 'Catégorie créée avec succès' });
     } catch (error) {
@@ -44,6 +47,7 @@ router.post('/', async (req, res) => {
 router.patch('/', async (req, res) => {
     try {
         const { idCategorie, libelle } = req.body;
+        console.log( idCategorie, libelle)
         const result = await pool.query('UPDATE Categorie set libelle = ? WHERE idCategorie = ?', [libelle, idCategorie]);
         res.status(201).send({ message: 'Catégorie Modifiée avec succès' });
     } catch (error) {

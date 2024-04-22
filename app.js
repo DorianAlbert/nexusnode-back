@@ -27,6 +27,8 @@ app.set('view engine', 'pug');
 
 app.use(cors());
 
+app.use('/images', express.static('public'))
+
 // Middleware
 app.use(logger('dev'));
 app.use(express.json());
