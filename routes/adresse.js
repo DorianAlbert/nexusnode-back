@@ -15,9 +15,12 @@ router.get('/user/:userId', async (req, res) => {
  * Créer une nouvelle adresse pour un utilisateur
  */
 router.post('/', async (req, res) => {
-    const { rue, ville, CDP, pays, idUser } = req.body;
-    const result = await pool.query('INSERT INTO Adresse (rue, ville, CDP, pays, idUser) VALUES (?, ?, ?, ?, ?)', [rue, ville, CDP, pays, idUser]);
-    res.status(201).send({ idAdresse: result.insertId });
+    const { rue, ville, CDP, pays, userID } = req.body;
+    console.log(req.body);
+    const result = await pool.query('INSERT INTO Adresse (rue, ville, CDP, pays, idUser) VALUES (?, ?, ?, ?, ?)', [rue, ville, CDP, pays, userID]);
+    let newIdString = result.insertId.toString();
+    let newId = parseInt(newIdString);
+    res.status(201).send({ idAdresse: newId });
 });
 
 /**
