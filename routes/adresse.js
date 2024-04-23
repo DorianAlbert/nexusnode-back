@@ -51,5 +51,4 @@ router.get('/:idAdresse', async (req, res) => {
     res.status(200).send(results);
 });
 
-
 module.exports = router;
