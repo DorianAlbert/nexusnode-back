@@ -57,7 +57,7 @@ router.get('/commandes/user/:idUser/date', async (req, res) => {
 /**
  * Ajouter une commande
  */
-router.post('/commandes', async (req, res) => {
+router.post('/', async (req, res) => {
     const { dateCommande, nomFacture, cheminFacture, idPaiement, idAdresse, idUser } = req.body;
     try {
         const result = await pool.query('INSERT INTO Commande (dateCommande, nomFacture, cheminFacture, idPaiement, idAdresse, idUser) VALUES (?, ?, ?, ?, ?, ?)', [dateCommande, nomFacture, cheminFacture, idPaiement, idAdresse, idUser]);
