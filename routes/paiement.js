@@ -20,9 +20,10 @@ router.get('/:idPaiement', async (req, res) => {
 });
 
 router.post('/', async (req, res) =>{
-    const{datePaiement, etat} = req.body;
+    console.log(req.body);
+    const{datePaiement, Etat} = req.body;
     try {
-        const result = await pool.query('INSERT INTO Paiement (datePaiement, Etat) VALUES (?, ?)', [datePaiement, etat]);
+        const result = await pool.query('INSERT INTO Paiement (datePaiement, Etat) VALUES (?, ?)', [datePaiement, Etat]);
         const insertIdAsString = result.insertId.toString();
         res.status(201).send({ message: 'Paiement ajouté avec succès', idPaiement: insertIdAsString });
     } catch (error) {
