@@ -11,9 +11,10 @@ const jwt = require('jsonwebtoken');
  * 3= Support
  */
 router.post('/sign-up', async (req, res) => {
+  console.log(req.body)
   try {
     const { nom, prenom, email, password, role } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password,10);
     const result = await pool.query('INSERT INTO Utilisateur (nom, prenom, mail, password, role) VALUES (?, ?, ?, ?, ?)', [nom, prenom, email, hashedPassword, role]);
     res.status(201).send({ message: 'Utilisateur créé avec succès' });
   } catch (error) {
@@ -26,11 +27,15 @@ router.post('/sign-up', async (req, res) => {
  */
 router.post('/sign-in', async (req, res) => {
   try {
+    console.log(req.body);
     const { email, password } = req.body;
     const rows = await pool.query('SELECT idUser,nom, prenom, mail, password, role FROM Utilisateur WHERE mail = ?', [email]);
+    //console.log(rows)
+
     if (rows.length > 0) {
       const user = rows[0];
-      const passwordIsValid = await bcrypt.compare(password, user.password);
+      const passwordIsValid = await bcrypt.compareSync(password, user.password);
+
       if (passwordIsValid) {
         const dataUser = {
           id: user.idUser,
@@ -38,8 +43,8 @@ router.post('/sign-in', async (req, res) => {
           nom: user.nom,
           mail: user.mail,
           prenom: user.prenom
-
         }
+
         const token = jwt.sign({ id: user.idUser, role: user.role }, 'secret', { expiresIn: 86400 });
         res.status(200).send({ auth: true, token: token, info: dataUser });
       } else {
@@ -57,7 +62,7 @@ router.post('/sign-in', async (req, res) => {
 
 router.get('/:userId'), async (req, res) => {
   const {userId} = req.param
-  const results = await pool.query('SELECT nom, prenom, mail  FROM Utisateur WHERE idUser = ?', [userId]);
+  const results = await pool.query('SELECT nom, prenom, mail  FROM Utilisateur WHERE idUser = ?', [userId]);
   res.status(200).send(results);
 }
 
