@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var pool = require('../middleware/database').databaseConnection
+var pool = require('../middleware/database').databaseConnection;
 
 /**
  * Afficher toutes les commandes
@@ -17,8 +17,7 @@ router.get('/', async (req, res) => {
 /**
  * Afficher toutes les commandes d'un utilisateur spécifique
  */
-
- router.get('/commandes/user/:idUser', async (req, res) => {
+router.get('/commandes/user/:idUser', async (req, res) => {
     const { idUser } = req.params;
     try {
         const results = await pool.query('SELECT * FROM Commande WHERE idUser = ?', [idUser]);
@@ -40,6 +39,7 @@ router.get('/commandes/date', async (req, res) => {
         res.status(500).send({ message: "Erreur lors de la récupération des commandes par dates", error: error.message });
     }
 });
+
 /**
  * Afficher toutes les commandes d'un utilisateur entre deux dates
  */
@@ -95,7 +95,7 @@ router.delete('/commandes/:idCommande', async (req, res) => {
 });
 
 /**
- *  Récupérer tous les Articles d'une commande par l'ID de la commande
+ * Récupérer tous les Articles d'une commande par l'ID de la commande
  */
 router.get('/commandes/:idCommande/materiels', async (req, res) => {
     const { idCommande } = req.params;
@@ -128,7 +128,7 @@ router.get('/materiels/ventes/:startDate/:endDate', async (req, res) => {
 });
 
 /**
- *  Ajouter un DetailCommande
+ * Ajouter un DetailCommande
  */
 router.post('/detailcommande', async (req, res) => {
     const { idCommande, idMateriel, quantite } = req.body;
@@ -155,7 +155,7 @@ router.patch('/detailcommande/:idCommande/:idMateriel', async (req, res) => {
 });
 
 /**
- * Modifier un DetailCommande
+ * Supprimer un DetailCommande
  */
 router.delete('/detailcommande/:idCommande/:idMateriel', async (req, res) => {
     const { idCommande, idMateriel } = req.params;
@@ -168,20 +168,54 @@ router.delete('/detailcommande/:idCommande/:idMateriel', async (req, res) => {
 });
 
 /**
- *  Obtenir le prix total des ventes pour chaque article
+ * Obtenir le prix total des ventes pour chaque article
  */
-router.get('/materiels/total-ventes', async (req, res) => {
+router.get('/total-ventes/:year', async (req, res) => {
+    const { year } = req.params;
     try {
         const results = await pool.query(
-            'SELECT m.idMateriel, m.libelle, SUM(dc.quantite) AS quantite_vendue, SUM(dc.quantite * m.prix) AS revenu_total FROM DetailCommande dc ' +
-            'JOIN Materiel m ON dc.idMateriel = m.idMateriel ' +
-            'GROUP BY m.idMateriel');
+            `SELECT
+                 'Total' AS libelle_produit,
+                 SUM(dc.quantite) AS quantite_totale,
+                 SUM(dc.quantite * m.prix) AS revenu_total
+             FROM DetailCommande dc
+                      JOIN Materiel m ON dc.idMateriel = m.idMateriel
+                      JOIN Commande c ON dc.idCommande = c.idCommande
+             WHERE YEAR(c.dateCommande) = ?
+
+             UNION
+
+             SELECT
+                 m.libelle AS libelle_produit,
+                 SUM(dc.quantite) AS quantite_totale,
+                 SUM(dc.quantite * m.prix) AS revenu_total
+             FROM DetailCommande dc
+                      JOIN Materiel m ON dc.idMateriel = m.idMateriel
+                      JOIN Commande c ON dc.idCommande = c.idCommande
+             WHERE YEAR(c.dateCommande) = ?
+             GROUP BY m.idMateriel`,
+            [year, year]
+        );
         res.status(200).send(results);
     } catch (error) {
-        res.status(500).send({ message: "Erreur lors de la récupération du total des ventes de chaque article", error: error.message });
+        res.status(500).send({ message: `Erreur lors de la récupération du total des ventes de chaque article pour l'année ${year}`, error: error.message });
     }
 });
 
+
+/**
+ * Obtenir le nombre total de commandes
+ */
+router.get('/totalCommande/:year', async (req, res) => {
+    const{year}= req.params
+    try {
+        const results = await pool.query(`SELECT COUNT(*) as nbCommande FROM Commande WHERE dateCommande BETWEEN \'${year}-01-01\' AND \'${year}-12-31\';\n`);
+        const nbCommande = results[0].nbCommande.toString(); // Convertir le BigInt en chaîne de caractères
+        res.status(200).send({ nbCommande: nbCommande });
+    } catch (error) {
+        res.status(500).send({ message: "Erreur lors de la récupération du total des commandes", error: error.message });
+    }
+});
 
 
 module.exports = router;

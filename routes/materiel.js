@@ -70,15 +70,15 @@ router.post('/', upload.single('image'), async (req, res) => {
             return res.status(400).send({ message: "Le prix est invalide" });
         }
 
+        // Convertir la date en format YYYY-MM-DD
+        const formattedDate = new Date(dateSortie).toISOString().split('T')[0];
+
         let imagePath = null;
         if (image) {
             imagePath = `images/materiels/${Date.now()}-${image.originalname}`; // ou .jpg, selon votre format d'image
             // Déplacez l'image téléchargée vers le répertoire public
-            await fs.promises.rename(image.path, path.join(__dirname, 'public', imagePath));
+            await fs.promises.rename(image.path, path.join(__dirname, '..', 'public', imagePath));
         }
-
-        // Convertir la date en format YYYY-MM-DD
-        const formattedDate = new Date(dateSortie).toISOString().split('T')[0];
 
         const result = await pool.query('INSERT INTO Materiel (libelle, description, prix, dateSortie, idCategorie, PATH_Image) VALUES (?, ?, ?, ?, ?, ?)', [libelle, description, parsedPrix, formattedDate, idCategorie, imagePath]);
 
@@ -125,12 +125,21 @@ router.patch('/:idMateriel', upload.single('image'), async (req, res) => {
 router.delete('/:idMateriel', async (req, res) => {
     const { idMateriel } = req.params;
     try {
-        const result = await pool.query('DELETE FROM Materiel WHERE idMateriel = ?', [idMateriel]);
-        if (result.affectedRows) {
-            res.send({ message: 'Matériel supprimé avec succès' });
-        } else {
-            res.status(404).send({ message: 'Matériel non trouvé' });
+        const contentCommande = await pool.query('select * from DetailCommande where idMateriel = ?', [idMateriel]);
+        console.log(contentCommande.length, contentCommande)
+        if(contentCommande.length !== 0){
+            res.send({ message: 'Impossible de supprimer un produit lié à une ou plusieurs commandes'});
+        }else{
+            const result = await pool.query('DELETE FROM Materiel WHERE idMateriel = ?', [idMateriel]);
+            if (result.affectedRows) {
+                res.send({ message: 'Matériel supprimé avec succès' });
+            } else {
+                res.status(404).send({ message: 'Matériel non trouvé' });
+            }
+
+
         }
+
     } catch (error) {
         console.error("Erreur lors de la suppression du matériel:", error);
         res.status(500).send({ message: "Erreur lors de la suppression du matériel", error: error.message });
@@ -158,4 +167,3 @@ router.post('/recherche', async (req, res) => {
 });
 
 module.exports = router;
-
