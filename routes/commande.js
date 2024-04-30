@@ -59,9 +59,12 @@ router.get('/commandes/user/:idUser/date', async (req, res) => {
  */
 router.post('/', async (req, res) => {
     const { dateCommande, nomFacture, cheminFacture, idPaiement, idAdresse, idUser } = req.body;
+    console.log(req.body);
     try {
         const result = await pool.query('INSERT INTO Commande (dateCommande, nomFacture, cheminFacture, idPaiement, idAdresse, idUser) VALUES (?, ?, ?, ?, ?, ?)', [dateCommande, nomFacture, cheminFacture, idPaiement, idAdresse, idUser]);
-        res.status(201).send({ idCommande: result.insertId });
+        let newIdString = result.insertId.toString();
+        let newId = parseInt(newIdString);
+        res.status(201).send({ idCommande: newId });
     } catch (error) {
         res.status(500).send({ message: "Erreur lors de l'ajout de la commande", error: error.message });
     }

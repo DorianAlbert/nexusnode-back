@@ -19,7 +19,6 @@ router.post('/', async (req, res) => {
     const result = await pool.query('INSERT INTO Adresse (rue, ville, CDP, pays, idUser) VALUES (?, ?, ?, ?, ?)', [rue, ville, CDP, pays, userID]);
     let newIdString = result.insertId.toString();
     let newId = parseInt(newIdString);
-    console.log(newId);
     res.status(201).send({ idAdresse: newId });
 });
 
