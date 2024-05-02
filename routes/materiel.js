@@ -88,7 +88,9 @@ router.post('/', upload.single('image'), async (req, res) => {
         res.status(500).send({ message: "Erreur lors de l'ajout du produit", error: error.message });
     }
 });
-
+/**
+ * Modifie un produit selon sa catégorie
+ */
 router.patch('/:idMateriel', upload.single('image'), async (req, res) => {
     const { idMateriel } = req.params;
     console.log(req.body);

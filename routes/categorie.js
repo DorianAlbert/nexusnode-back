@@ -17,6 +17,9 @@ router.get('/', async (req, res, next) => {
         res.status(500).send({ message: "Erreur lors de la récupération des catégories", error: error.message });
     }
 });
+/**
+ * récupère une catégorie en fonction de son ID
+ */
 router.get('/:idCat', async (req, res, next) => {
     const {idCat} = req.params
     try {
@@ -30,6 +33,9 @@ router.get('/:idCat', async (req, res, next) => {
         res.status(500).send({ message: "Erreur lors de la récupération des catégories", error: error.message });
     }
 });
+/**
+ * Créer une nouvelle Catégorie
+ */
 router.post('/', async (req, res) => {
     console.log(req.body);
 
@@ -43,7 +49,9 @@ router.post('/', async (req, res) => {
         res.status(500).send({ message: "Erreur lors de la création de la Catégorie", error: error.message });
     }
 });
-
+/**
+ * Modifie une Catégorie en focntion de son id
+ */
 router.patch('/', async (req, res) => {
     try {
         const { idCategorie, libelle } = req.body;

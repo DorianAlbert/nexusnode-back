@@ -28,6 +28,8 @@ app.set('view engine', 'pug');
 app.use(cors());
 
 app.use('/images', express.static('public'))
+app.use('/factures', express.static(path.join(__dirname, 'public', 'Facture')));
+
 
 // Middleware
 app.use(logger('dev'));

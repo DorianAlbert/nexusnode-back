@@ -18,7 +18,9 @@ router.get('/:idPaiement', async (req, res) => {
     const results = await pool.query('SELECT * FROM Paiement WHERE idPaiement = ?', [idPaiement]);
     res.status(200).send(results);
 });
-
+/**
+ * ajoute un nouveau Paiement
+ */
 router.post('/', async (req, res) =>{
     console.log(req.body);
     const{datePaiement, Etat} = req.body;
@@ -33,7 +35,9 @@ router.post('/', async (req, res) =>{
         console.error("Erreur lors de l'ajout du Paiement:", error);
         res.status(500).send({ message: "Erreur lors de l'ajout du Paiement", error: error.message });
     }});
-
+/**
+ * Modifie un paiement selon son id
+ */
 router.patch('/:idPaiement', async (req, res) => {
     const { idPaiement } = req.params;
     const{etat} = req.body;

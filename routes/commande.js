@@ -1,7 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var pool = require('../middleware/database').databaseConnection;
-
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const path = require('path');
 /**
  * Afficher toutes les commandes
  */
@@ -52,25 +54,100 @@ router.get('/commandes/user/:idUser/date', async (req, res) => {
     } catch (error) {
         res.status(500).send({ message: "Erreur lors de la récupération des commandes de l'utilisateur par dates", error: error.message });
     }
-});
+});router.post('/', async (req, res) => {
+    const { dateCommande, nomFacture, cheminFacture, idPaiement, idAdresse, idUser, cartItems } = req.body;
 
-/**
- * Ajouter une commande
- */
-router.post('/', async (req, res) => {
-    const { dateCommande, nomFacture, cheminFacture, idPaiement, idAdresse, idUser } = req.body;
-    console.log(req.body);
     try {
+        // Insérer la commande principale dans la table Commande
         const result = await pool.query('INSERT INTO Commande (dateCommande, nomFacture, cheminFacture, idPaiement, idAdresse, idUser) VALUES (?, ?, ?, ?, ?, ?)', [dateCommande, nomFacture, cheminFacture, idPaiement, idAdresse, idUser]);
-        let newIdString = result.insertId.toString();
-        let newId = parseInt(newIdString);
+        let newId = result.insertId.toString();  // Convertir BigInt en String pour éviter des problèmes de sérialisation JSON
+
+        // Insérer chaque produit dans DetailCommande
+        for (const { id, quantite } of cartItems) {
+            await pool.query('INSERT INTO DetailCommande (idCommande, idMateriel, quantite) VALUES (?, ?, ?)', [newId, id, quantite]);
+        }
+
+        // Générer la facture au format PDF
+        const doc = new PDFDocument();
+        const fileName = `${nomFacture}.pdf`;
+        const filePath = path.join(__dirname, '..', 'public', 'Facture', fileName);
+        doc.pipe(fs.createWriteStream(filePath));
+
+        // Mise en page de la facture
+        doc.font('Helvetica-Bold')
+            .fontSize(22)
+            .text('NexusNode', { align: 'center' })
+            .moveDown(0.5);
+
+        doc.fontSize(18)
+            .text('FACTURE', { align: 'center' })
+            .moveDown(1);
+
+        doc.fontSize(12)
+            .text(`Date: ${dateCommande}`, { continued: true })
+            .text(`Facture #${nomFacture}`, { align: 'right' });
+
+        // Informations du client
+        const userData = await pool.query('SELECT nom, prenom FROM Utilisateur WHERE idUser = ?', [idUser]);
+        const { nom, prenom } = userData[0];
+        doc.text(`Facturé à: ${prenom} ${nom}`)
+            .moveDown(1);
+
+        // En-tête du tableau
+        // Configuration de l'en-tête du tableau
+        doc.strokeColor("#aaaaaa")
+            .lineWidth(1)
+            .rect(50, doc.y, 500, 20) // Dessine un rectangle pour l'en-tête
+            .fillAndStroke("#eeeeee", "#aaaaaa");
+
+// Définir la position y pour les textes de l'en-tête pour qu'ils soient alignés dans le rectangle
+        const headerPositionY = doc.y + 6; // Ajoute un petit offset pour centrer le texte verticalement dans le rectangle
+
+// Textes de l'en-tête sur la même ligne
+        doc.font('Helvetica')
+            .fontSize(10)
+            .fillColor('black')
+            .text('Produit', 60, headerPositionY, { width: 220, align: 'left' })
+            .text('Quantité', 280, headerPositionY, { width: 90, align: 'right' })
+            .text('Prix unitaire', 370, headerPositionY, { width: 90, align: 'right' })
+            .text('Total', 450, headerPositionY, { width: 90, align: 'right' });
+
+// Déplace le curseur sous le rectangle de l'en-tête pour commencer les entrées de produits
+        doc.moveDown(1.5);
+
+
+        // Détails du produit et calcul des totaux
+        let totalHT = 0;
+        for (const { id, quantite } of cartItems) {
+            const productData = await pool.query('SELECT libelle, prix FROM Materiel WHERE idMateriel = ?', [id]);
+            const { libelle, prix } = productData[0];
+            let subtotal = prix * quantite;
+            totalHT += subtotal;
+
+            doc.text(libelle, 60, doc.y, { width: 220, align: 'left' })
+                .text(quantite.toString(), 280, doc.y, { width: 90, align: 'right' })
+                .text(`${prix.toFixed(2)}€`, 370, doc.y, { width: 90, align: 'right' })
+                .text(`${subtotal.toFixed(2)}€`, 460, doc.y, { width: 90, align: 'right' })
+                .moveDown(0.2);
+        }
+
+        // Affichage du total
+        doc.font('Helvetica-Bold')
+            .fontSize(12)
+            .text(`Total TTC: ${totalHT.toFixed(2)}€`, 410, doc.y, { align: 'right' });
+
+        doc.end();
+
+        // Mettre à jour le chemin de la facture dans la base de données
+        await pool.query('UPDATE Commande SET cheminFacture = ? WHERE idCommande = ?', [filePath, newId]);
+
+        // Envoyer la réponse avec l'ID de la commande
         res.status(201).send({ idCommande: newId });
     } catch (error) {
+        console.error("Erreur lors de l'ajout de la commande: ", error.message);
         res.status(500).send({ message: "Erreur lors de l'ajout de la commande", error: error.message });
     }
-});
-
-/**
+});/**
  * Modifier une commande existante
  */
 router.put('/commandes/:idCommande', async (req, res) => {

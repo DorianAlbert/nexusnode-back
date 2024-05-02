@@ -5,7 +5,7 @@ var pool = require('../middleware/database').databaseConnection
 /**
  * Afficher toutes les adresses d'un utilisateur spécifique
  */
-router.get('/user/:userId', async (req, res) => {
+router.get('/:userId', async (req, res) => {
     const { userId } = req.params;
     const results = await pool.query('SELECT * FROM Adresse WHERE idUser = ?', [userId]);
     res.status(200).send(results);
