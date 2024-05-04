@@ -15,24 +15,57 @@ router.get('/', async (req, res) => {
         res.status(500).send({ message: 'Erreur lors de la récupération des commandes', error: error.message });
     }
 });
-
-/**
- * Afficher toutes les commandes d'un utilisateur spécifique
- */
-router.get('/commandes/user/:idUser', async (req, res) => {
-    const { idUser } = req.params;
+router.get('/all', async (req, res) => {
     try {
-        const results = await pool.query('SELECT * FROM Commande WHERE idUser = ?', [idUser]);
+        const results = await pool.query('SELECT \n' +
+            '    CONCAT(u.nom, \' \', u.prenom) AS NomComplet,\n' +
+            '    c.idCommande,\n' +
+            '    SUM(dc.quantite * m.prix) AS PrixTotal,\n' +
+            '    c.dateCommande, \n' +
+            '    c.nomFacture\n' +
+            'FROM Commande c\n' +
+            'JOIN Utilisateur u ON c.idUser = u.idUser\n' +
+            'JOIN DetailCommande dc ON c.idCommande = dc.idCommande\n' +
+            'JOIN Materiel m ON dc.idMateriel = m.idMateriel\n' +
+            'GROUP BY c.idCommande, c.dateCommande, c.nomFacture;\n');
         res.status(200).send(results);
     } catch (error) {
-        res.status(500).send({ message: "Erreur lors de la récupération des commandes de l'utilisateur", error: error.message });
+        res.status(500).send({ message: 'Erreur lors de la récupération des commandes', error: error.message });
     }
 });
 
 /**
+ * Afficher toutes les commandes d'un utilisateur spécifique
+ */
+router.get('/:idUser', async (req, res) => {
+    const idUser = req.params.idUser;  // Correction ici pour extraire correctement l'ID utilisateur.
+    try {
+        const results = await pool.query(
+            `SELECT 
+                CONCAT(u.nom, ' ', u.prenom) AS NomComplet,
+                c.idCommande,
+                SUM(dc.quantite * m.prix) AS PrixTotal,
+                c.dateCommande, 
+                c.nomFacture
+            FROM Commande c
+            JOIN Utilisateur u ON c.idUser = u.idUser
+            JOIN DetailCommande dc ON c.idCommande = dc.idCommande
+            JOIN Materiel m ON dc.idMateriel = m.idMateriel
+            WHERE u.idUser = ?
+            GROUP BY c.idCommande, c.dateCommande, c.nomFacture`,
+            [idUser]  // Passage de l'ID utilisateur comme paramètre dans la requête
+        );
+        res.status(200).send(results);
+    } catch (error) {
+        res.status(500).send({ message: 'Erreur lors de la récupération des commandes', error: error.message });
+    }
+});
+
+
+/**
  * Afficher toutes les commandes entre deux dates
  */
-router.get('/commandes/date', async (req, res) => {
+router.get('/date', async (req, res) => {
     const { startDate, endDate } = req.query;
     try {
         const results = await pool.query('SELECT * FROM Commande WHERE dateCommande BETWEEN ? AND ?', [startDate, endDate]);
@@ -45,7 +78,7 @@ router.get('/commandes/date', async (req, res) => {
 /**
  * Afficher toutes les commandes d'un utilisateur entre deux dates
  */
-router.get('/commandes/user/:idUser/date', async (req, res) => {
+router.get('/user/:idUser/date', async (req, res) => {
     const { idUser } = req.params;
     const { startDate, endDate } = req.query;
     try {
