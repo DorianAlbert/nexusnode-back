@@ -23,6 +23,28 @@ const upload = multer({storage: storage });
 /**
  * Récupere la liste de tout les Matériels présent dans la base de donnée
  */
+
+/**
+ * @openapi
+ * /materiels:
+ *   get:
+ *     tags:
+ *       - Matériel
+ *     summary: Récupère la liste de tous les matériaux
+ *     description: Renvoie une liste de tous les matériaux disponibles dans la base de données, incluant leurs détails.
+ *     responses:
+ *       200:
+ *         description: Liste de tous les matériaux récupérée avec succès.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Materiel'
+ *       500:
+ *         description: Erreur serveur
+ */
+
 router.get('/', async (req, res, next) => {
     try {
         const result = await pool.query('SELECT Materiel.libelle AS materiel_libelle, Materiel.idMateriel, \n' +
@@ -43,6 +65,35 @@ router.get('/', async (req, res, next) => {
 /**
  * Récupere la liste des Matériels en fonction d'une catégorie selectionné
  */
+
+/**
+ * @openapi
+ * /materiels/{idCategorie}:
+ *   get:
+ *     tags:
+ *       - Matériel
+ *     summary: Récupère les matériaux par catégorie
+ *     description: Renvoie tous les matériaux associés à une catégorie spécifique.
+ *     parameters:
+ *       - in: path
+ *         name: idCategorie
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Identifiant de la catégorie
+ *     responses:
+ *       200:
+ *         description: Liste des matériaux récupérée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Materiel'
+ *       500:
+ *         description: Erreur serveur
+ */
+
 router.get('/:idCategorie', async (req, res, next) => {
     const { idCategorie } = req.params;
 
@@ -59,6 +110,46 @@ router.get('/:idCategorie', async (req, res, next) => {
  * Ajoute un nouveau Matériel dans la base de donnée
  * libelle, description, prix, dateSortie, idCategorie
  */
+
+/**
+ * @openapi
+ * /materiels:
+ *   post:
+ *     tags:
+ *       - Matériel
+ *     summary: Ajoute un nouveau matériel
+ *     description: Ajoute un nouveau matériel dans la base de données avec les détails fournis, y compris une image.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               libelle:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               prix:
+ *                 type: number
+ *                 format: float
+ *               dateSortie:
+ *                 type: string
+ *                 format: date
+ *               idCategorie:
+ *                 type: integer
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Matériel ajouté avec succès
+ *       400:
+ *         description: Données d'entrée invalides
+ *       500:
+ *         description: Erreur serveur
+ */
+
 
 router.post('/', upload.single('image'), async (req, res) => {
     const { libelle, description, prix, dateSortie, idCategorie } = req.body;
@@ -91,6 +182,51 @@ router.post('/', upload.single('image'), async (req, res) => {
 /**
  * Modifie un produit selon sa catégorie
  */
+/**
+ * @openapi
+ * /materiels/{idMateriel}:
+ *   patch:
+ *     tags:
+ *       - Matériel
+ *     summary: Modifie un matériel existant
+ *     description: Met à jour les détails d'un matériel spécifique y compris la possibilité de changer l'image.
+ *     parameters:
+ *       - in: path
+ *         name: idMateriel
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               libelle:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               prix:
+ *                 type: number
+ *                 format: float
+ *               dateSortie:
+ *                 type: string
+ *                 format: date
+ *               idCategorie:
+ *                 type: integer
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Matériel mis à jour avec succès
+ *       400:
+ *         description: Données d'entrée invalides
+ *       500:
+ *         description: Erreur serveur
+ */
+
 router.patch('/:idMateriel', upload.single('image'), async (req, res) => {
     const { idMateriel } = req.params;
     console.log(req.body);
@@ -124,6 +260,30 @@ router.patch('/:idMateriel', upload.single('image'), async (req, res) => {
 /**
  * Supprime un matériel en fonction de son ID
  */
+
+/**
+ * @openapi
+ * /materiels/{idMateriel}:
+ *   delete:
+ *     tags:
+ *       - Matériel
+ *     summary: Supprime un matériel
+ *     description: Supprime un matériel de la base de données si celui-ci n'est pas lié à une commande.
+ *     parameters:
+ *       - in: path
+ *         name: idMateriel
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Matériel supprimé avec succès
+ *       404:
+ *         description: Matériel non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+
 router.delete('/:idMateriel', async (req, res) => {
     const { idMateriel } = req.params;
     try {
@@ -150,6 +310,33 @@ router.delete('/:idMateriel', async (req, res) => {
 /**
  * Permet la recherche de un ou plusieurs Matériel en fonctions d'un chaine de caractère saisit
  */
+
+/**
+ * @openapi
+ * /materiels/recherche:
+ *   post:
+ *     tags:
+ *       - Matériel
+ *     summary: Recherche de matériel
+ *     description: Recherche les matériaux qui correspondent à une chaîne de caractères fournie.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               searchString:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Résultats de la recherche retournés avec succès
+ *       404:
+ *         description: Aucun matériel trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+
 router.post('/recherche', async (req, res) => {
     const { searchString } = req.body;
     if (!searchString) {
