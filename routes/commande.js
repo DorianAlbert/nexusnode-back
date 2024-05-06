@@ -28,8 +28,31 @@ const path = require('path');
  */
 router.get('/', async (req, res) => {
     try {
-        const results = await pool.query('SELECT * FROM Commande');
-        res.status(200).send(results);
+        const query = `
+            SELECT 
+                C.idCommande,
+                C.nomFacture,
+                C.cheminFacture,
+                C.dateCommande,
+                CONCAT(A.rue, ', ', A.ville, ', ', A.CDP, ', ', A.pays) AS AdresseLivraison,
+                U.idUser,
+                CONCAT(U.nom, ' ', U.prenom) AS NomClient,
+                SUM(DC.quantite * M.prix) AS TotalHT,
+                SUM(DC.quantite * M.prix) * 1.20 AS TotalTTC,
+                GROUP_CONCAT(CONCAT(M.libelle, ' x ', DC.quantite) SEPARATOR ', ') AS DetailsProduits
+            FROM Commande C
+            JOIN Adresse A ON C.idAdresse = A.idAdresse
+            JOIN Utilisateur U ON C.idUser = U.idUser
+            JOIN DetailCommande DC ON C.idCommande = DC.idCommande
+            JOIN Materiel M ON DC.idMateriel = M.idMateriel
+            GROUP BY C.idCommande;
+        `;
+        const results = await pool.query(query);
+        if (results.length === 0) {
+            res.status(404).send({ message: 'Aucune commande trouvée.' });
+        } else {
+            res.status(200).send(results);
+        }
     } catch (error) {
         res.status(500).send({ message: 'Erreur lors de la récupération des commandes', error: error.message });
     }
@@ -52,6 +75,7 @@ router.get('/all', async (req, res) => {
         res.status(500).send({ message: 'Erreur lors de la récupération des commandes', error: error.message });
     }
 });
+
 
 /**
  * Afficher toutes les commandes d'un utilisateur spécifique
