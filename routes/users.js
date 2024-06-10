@@ -50,6 +50,14 @@ router.post('/sign-up', async (req, res) => {
   }
 });
 
+router.get('/', async (req, res) => {
+  try {
+    const result = await pool.query('select * from Utilisateur ');
+    res.status(201).send({ message: 'Utilisateur créé avec succès' });
+  } catch (error) {
+    res.status(500).send({ message: "Erreur lors de la création de l'utilisateur", error: error.message });
+  }
+});
 /**
  * @openapi
  * /users/sign-in:
